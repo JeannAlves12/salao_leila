@@ -1,0 +1,45 @@
+{% extends 'appointments/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-warning">
+            <div class="card-header bg-warning text-dark text-center fw-bold">
+                Sugestão de Agendamento
+            </div>
+            <div class="card-body text-center">
+                <p class="fs-5">Vimos que você já tem um agendamento nesta mesma semana no dia:</p>
+                <h4 class="text-primary mb-4">{{ existing_date|date:"d/m/Y \à\s H:i" }}</h4>
+                
+                <p>Gostaria de aproveitar e agendar estes novos serviços para o mesmo dia?</p>
+                
+                <div class="d-flex justify-content-center gap-3 mt-4">
+                    <!-- Botão de Manter a Data Original -->
+                    <form method="post" action="{% url 'new_appointment' %}">
+                        {% csrf_token %}
+                        <!-- Recriando o formulário em background para a view -->
+                        <input type="hidden" name="date_time" value="{{ desired_date|date:'Y-m-d\TH:i' }}">
+                        {% for s in services_list %}
+                            <input type="hidden" name="services" value="{{ s }}">
+                        {% endfor %}
+                        <input type="hidden" name="ignore_suggestion" value="true">
+                        <button type="submit" class="btn btn-outline-secondary">Não, manter dia {{ desired_date|date:"d/m" }}</button>
+                    </form>
+
+                    <!-- Botão de Aceitar a Sugestão -->
+                    <form method="post" action="{% url 'new_appointment' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="date_time" value="{{ desired_date|date:'Y-m-d\TH:i' }}">
+                        <input type="hidden" name="suggested_date" value="{{ existing_date|date:'Y-m-d\TH:i' }}">
+                        {% for s in services_list %}
+                            <input type="hidden" name="services" value="{{ s }}">
+                        {% endfor %}
+                        <input type="hidden" name="accept_suggestion" value="true">
+                        <button type="submit" class="btn btn-success">Sim, agendar para dia {{ existing_date|date:"d/m" }}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends 'appointments/base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 text-center">
+        <h2 class="display-6">Nossos Serviços</h2>
+        <p class="text-muted">Conheça as opções para o seu agendamento</p>
+    </div>
+</div>
+
+<div class="row">
+    {% for service in services %}
+    <div class="col-md-4 mb-3">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body text-center">
+                <h5 class="card-title">{{ service.name }}</h5>
+                <h6 class="card-subtitle mt-2 text-primary fs-5">R$ {{ service.price }}</h6>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center">
+        <p class="text-muted">Nenhum serviço cadastrado pela gerência ainda.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

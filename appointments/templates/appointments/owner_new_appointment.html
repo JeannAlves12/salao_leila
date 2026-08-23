@@ -1,0 +1,37 @@
+{% extends 'appointments/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 border-top border-success border-3">
+            <div class="card-body">
+                <h3 class="card-title text-center mb-4">Agendar Atendimento (Gerência)</h3>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        {{ form.client.label_tag }}
+                        {{ form.client }}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.date_time.label_tag }}
+                        {{ form.date_time }}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">{{ form.services.label }}</label>
+                        <div class="border p-3 rounded bg-light">
+                            {{ form.services }}
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100">Criar Agendamento</button>
+                    <a href="{% url 'owner_dashboard' %}" class="btn btn-light w-100 mt-2">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

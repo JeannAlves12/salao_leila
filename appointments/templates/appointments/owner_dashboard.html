@@ -1,0 +1,117 @@
+{% extends 'appointments/base.html' %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-12">
+        <h2 class="mb-3">Painel Gerencial do Dono</h2>
+        <p class="text-muted">Acompanhamento operacional e desempenho do salão</p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Filtro de Semanas -->
+        <form method="get" class="mb-4 d-flex align-items-end gap-2 bg-white p-3 shadow-sm rounded border">
+            <div>
+                <label class="form-label text-muted mb-1">Ver semana do dia:</label>
+                <input type="date" name="week_filter" class="form-control" value="{{ selected_date }}">
+            </div>
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+            <span class="text-muted ms-3">Exibindo de {{ start_of_week|date:"d/m/Y" }} a {{ end_of_week|date:"d/m/Y" }}</span>
+        </form>
+
+        <!-- Cards de Faturamento Semanal e Total de Agendamentos -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card text-white bg-dark shadow-sm h-100">
+                    <div class="card-body d-flex flex-column justify-content-center">
+                        <h5 class="card-title">Faturamento Previsto</h5>
+                        <p class="card-text fs-3 fw-bold text-success mb-0">R$ {{ weekly_revenue }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-light shadow-sm border-0 border-start border-primary border-4 h-100">
+                    <div class="card-body d-flex flex-column justify-content-center">
+                        <h5 class="card-title text-muted">Total de Agendamentos</h5>
+                        <p class="card-text fs-3 fw-bold text-primary mb-0">{{ total_appointments }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="mb-3">Agendamentos da Semana</h3>
+        
+        {% if appointments %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover shadow-sm bg-white rounded">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Data/Hora</th>
+                            <th>Status Global</th>
+                            <th>Serviços e Status Operacional</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appt in appointments %}
+                        <tr>
+                            <td class="align-middle fw-bold">{{ appt.client.username }}</td>
+                            <td class="align-middle">{{ appt.date_time|date:"d/m/Y H:i" }}</td>
+                            <td class="align-middle">
+                                {% if appt.is_confirmed %}
+                                    <span class="badge bg-success">Confirmado</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">Pendente</span>
+                                {% endif %}
+                            </td>
+                            <td class="align-middle">
+                                <ul class="list-unstyled m-0">
+                                    {% for item in appt.items.all %}
+                                    <li class="mb-2 d-flex align-items-center justify-content-between border-bottom pb-1">
+                                        <span class="me-2">
+                                            {{ item.service.name }} <strong class="text-success">(R$ {{ item.service.price }})</strong> - <span class="text-muted">({{ item.get_status_display }})</span>
+                                        </span>
+                                        
+                                        <!-- Formulário rápido para alterar o status individual de cada serviço -->
+                                        <form method="post" action="{% url 'update_item_status' item.id %}" class="d-inline-flex m-0">
+                                            {% csrf_token %}
+                                            <select name="status" class="form-select form-select-sm me-1" style="width: 130px;">
+                                                <option value="pendente" {% if item.status == 'pendente' %}selected{% endif %}>Pendente</option>
+                                                <option value="andamento" {% if item.status == 'andamento' %}selected{% endif %}>Em Andamento</option>
+                                                <option value="concluido" {% if item.status == 'concluido' %}selected{% endif %}>Concluído</option>
+                                                <option value="cancelado" {% if item.status == 'cancelado' %}selected{% endif %}>Cancelado</option>
+                                            </select>
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary">OK</button>
+                                        </form>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                            <td class="align-middle text-center">
+                                <!-- Botão Editar Data -->
+                                <a href="{% url 'owner_edit_appointment' appt.id %}" class="btn btn-sm btn-outline-primary mb-2 w-100">
+                                    Editar
+                                </a>
+                                <!-- Botão Confirmar -->
+                                <a href="{% url 'toggle_appointment_confirmation' appt.id %}" class="btn btn-sm {% if appt.is_confirmed %}btn-outline-danger{% else %}btn-success{% endif %} w-100">
+                                    {% if appt.is_confirmed %}Desconfirmar{% else %}Confirmar{% endif %}
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">Nenhum agendamento registrado no sistema para esta semana.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends 'appointments/base.html' %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-12">
+        <h2 class="mb-4">Meus Agendamentos</h2>
+        <!-- Formulário de Filtro de Período -->
+        <form method="get" class="row g-3 mb-4 bg-white p-3 shadow-sm rounded border">
+            <div class="col-md-4">
+                <label class="form-label text-muted">Data Inicial</label>
+                <input type="date" name="start_date" class="form-control" value="{{ start_date|default_if_none:'' }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label text-muted">Data Final</label>
+                <input type="date" name="end_date" class="form-control" value="{{ end_date|default_if_none:'' }}">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Filtrar Histórico</button>
+            </div>
+        </form>
+        
+        <!-- Exibição de Alertas (Ex: Menos de 2 dias) -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        {% if appointments %}
+            <div class="list-group shadow-sm">
+                {% for appt in appointments %}
+                <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 rounded border">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                        <h5 class="mb-1 text-primary">Data: {{ appt.date_time|date:"d/m/Y \à\s H:i" }}</h5>
+                        <small>
+                            {% if appt.is_confirmed %}
+                                <span class="badge bg-success">Confirmado pela Gerência</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Aguardando Confirmação</span>
+                            {% endif %}
+                        </small>
+                    </div>
+                    
+                    <p class="mb-1 fw-bold mt-2">Serviços:</p>
+                    <ul class="mb-3">
+                        {% for item in appt.items.all %}
+                            <li>{{ item.service.name }} - <span class="text-muted">{{ item.get_status_display }}</span></li>
+                        {% endfor %}
+                    </ul>
+                    
+                    <!-- Lógica condicional na tela para o botão de editar -->
+                    <div class="mt-2">
+                        <a href="{% url 'edit_appointment' appt.id %}" class="btn btn-sm btn-outline-primary">Editar Agendamento</a>
+                        <small class="text-muted ms-2">(Alterações permitidas até 2 dias antes)</small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info" role="alert">
+                Você ainda não possui nenhum agendamento. <a href="{% url 'new_appointment' %}" class="alert-link">Agende agora!</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
