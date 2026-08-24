@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cabeleleila Leila</title>
-    <!-- Importando o Bootstrap direto do CDN -->
+    <!-- Importando o CSS do Bootstrap direto do CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
@@ -34,10 +34,43 @@
             </div>
         </div>
     </nav>
+    
     <div class="container">
+        <!-- Bloco de Mensagens com Auto-Fechamento -->
+        {% if messages %}
+            <div class="mt-3">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Script para auto-destruição das mensagens em 5 segundos -->
+            <script>
+                setTimeout(function() {
+                    let alerts = document.querySelectorAll('.alert');
+                    alerts.forEach(function(alert) {
+                        // Verifica se a API do Bootstrap JS está carregada e fecha o alerta
+                        if (typeof bootstrap !== 'undefined') {
+                            let bsAlert = new bootstrap.Alert(alert);
+                            bsAlert.close();
+                        } else {
+                            // Fallback caso o JS do Bootstrap falhe
+                            alert.style.display = 'none';
+                        }
+                    });
+                }, 5000); // 5000 milissegundos = 5 segundos
+            </script>
+        {% endif %}
+
         <!-- O conteúdo das outras telas será injetado aqui -->
         {% block content %}
         {% endblock %}
     </div>
+
+    <!-- Importando o JS do Bootstrap (Necessário para animações, modais e para fechar os alertas) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

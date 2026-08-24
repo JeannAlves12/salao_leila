@@ -40,7 +40,7 @@ def get_owner_dashboard_metrics(base_date=None):
     """
     if base_date:
         now = parse_date(base_date)
-        if not now: # Fallback caso a data venha inválida
+        if not now:
             now = timezone.now().date()
     else:
         now = timezone.now().date()

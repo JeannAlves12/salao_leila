@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
@@ -7,7 +7,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.dateparse import parse_datetime
 from django.core.paginator import Paginator
 from .models import Service, Appointment, AppointmentItem
-from .forms import AppointmentForm, OwnerAppointmentForm
+from .forms import AppointmentForm, OwnerAppointmentForm, ServiceForm
 from .services import check_existing_appointment_this_week, can_edit_appointment, get_owner_dashboard_metrics
 
 
@@ -26,6 +26,13 @@ def signup_view(request):
     else:
         form = UserCreationForm()
     return render(request, 'appointments/signup.html', {'form': form})
+
+
+@login_required
+def login_redirect_view(request):
+    if request.user.is_staff:
+        return redirect('owner_dashboard')
+    return redirect('service_list')
 
 
 @login_required
@@ -72,9 +79,14 @@ def new_appointment_view(request):
             
             return redirect('appointment_history')
     else:
-        form = AppointmentForm()
+        service_id = request.GET.get('service_id')
 
-    return render(request, 'appointments/new_appointment.html', {'form': form})
+        if service_id:
+            form = AppointmentForm(initial={'services': [service_id]})
+        else:
+            form = AppointmentForm()
+
+    return render(request, 'appointments/client_new_appointment.html', {'form': form})
 
 
 @login_required
@@ -88,8 +100,12 @@ def appointment_history_view(request):
     if end_date:
         appointments = appointments.filter(date_time__date__lte=end_date)
 
-    return render(request, 'appointments/history.html', {
-        'appointments': appointments,
+    paginator = Paginator(appointments, 5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'appointments/client_history.html', {
+        'page_obj': page_obj,
         'start_date': start_date,
         'end_date': end_date
     })
@@ -128,14 +144,27 @@ def edit_appointment_view(request, appointment_id):
             'date_time': formatted_date
         })
     
-    return render(request, 'appointments/edit_appointment.html', {'form': form, 'appointment': appointment})
+    return render(request, 'appointments/client_edit_appointment.html', {'form': form, 'appointment': appointment})
 
 
 @login_required
-def login_redirect_view(request):
+def cancel_appointment_view(request, appointment_id):
+    appointment = Appointment.objects.get(id=appointment_id)
+
+    if appointment.client != request.user and not request.user.is_staff:
+        messages.error(request, 'Você não tem permissão para cancelar este agendamento!')
+        return redirect('service_list')
+    
+    if not request.user.is_staff and not can_edit_appointment(appointment):
+        messages.error(request, 'Agendamento acontece em menos de 2 dias. Favor ligar para o estabelecimento para cancelar!')
+        return redirect('appointment_history')
+    
+    appointment.delete()
+    messages.success(request, 'Agendamento cancelado com sucesso!')
+
     if request.user.is_staff:
         return redirect('owner_dashboard')
-    return redirect('service_list')
+    return redirect('appointment_history')
 
 
 @staff_member_required
@@ -223,24 +252,16 @@ def owner_new_appointment_view(request):
     return render(request, 'appointments/owner_new_appointment.html', {'form': form})
 
 
-@login_required
-def appointment_history_view(request):
-    appointments = Appointment.objects.filter(client=request.user).order_by('-date_time')
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
+@staff_member_required
+def service_detail_view(request, service_id):
+    service = get_object_or_404(Service, id=service_id)
 
-    if start_date:
-        appointments = appointments.filter(date_time__date__gte=start_date)
-    if end_date:
-        appointments = appointments.filter(date_time__date__lte=end_date)
-
-    # Configuração da Paginação (ex: 5 agendamentos por página)
-    paginator = Paginator(appointments, 5)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    return render(request, 'appointments/history.html', {
-        'page_obj': page_obj,  # Passamos o objeto paginado para o template
-        'start_date': start_date,
-        'end_date': end_date
-    })
+    if request.method == 'POST':
+        form = ServiceForm(request.POST, instance=service)
+        if form.is_valid():
+            service = form.save()
+            messages.success(request, f"Serviço {service.name} alterado com sucesso.")
+            return redirect('service_list')
+    else:
+        form = ServiceForm(instance=service)
+    return render(request, 'appointments/owner_service_detail.html', {'form': form, 'service': service})

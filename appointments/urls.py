@@ -12,8 +12,12 @@ urlpatterns = [
     path('history/', views.appointment_history_view, name='appointment_history'),
     path('editar/<int:appointment_id>/', views.edit_appointment_view, name='edit_appointment'),
     
+    #rota inteligente, funciona para os dois
+    path('cancelar/<int:appointment_id>/', views.cancel_appointment_view, name='cancel_appointment'),
+
     # Rotas da Gerência
     path('gerencia/', views.owner_dashboard_view, name='owner_dashboard'),
+    path('gerencia/servico/<int:service_id>/', views.service_detail_view, name='owner_service_detail'),
     path('gerencia/item/<int:item_id>/status/', views.update_item_status_view, name='update_item_status'),
     path('gerencia/agendamento/<int:appointment_id>/confirmar/', views.toggle_appointment_confirmation_view, name='toggle_appointment_confirmation'),
     path('gerencia/editar/<int:appointment_id>/', views.owner_edit_appointment_view, name='owner_edit_appointment'),

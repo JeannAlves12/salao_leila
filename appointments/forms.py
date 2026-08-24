@@ -92,3 +92,29 @@ class OwnerAppointmentForm(AppointmentForm):
     
     class Meta(AppointmentForm.Meta):
         fields = ['client', 'date_time', 'services']
+
+
+class ServiceForm(forms.ModelForm):
+    class Meta:
+        model = Service
+        fields = ['name', 'price', 'duration']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Ex: Corte de Cabelo'
+            }),
+            'price': forms.NumberInput(attrs={
+                'class': 'form-control', 
+                'step': '0.01', 
+                'placeholder': 'Ex: 50.00'
+            }),
+            'duration': forms.NumberInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Duração em minutos'
+            }),
+        }
+        labels = {
+            'name': 'Nome do Serviço',
+            'price': 'Preço (R$)',
+            'duration': 'Duração (minutos)'
+        }

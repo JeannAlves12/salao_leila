@@ -6,15 +6,6 @@
         <h2 class="mb-3">Painel Gerencial do Dono</h2>
         <p class="text-muted">Acompanhamento operacional e desempenho do salão</p>
 
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
-
         <!-- Filtro de Semanas -->
         <form method="get" class="mb-4 d-flex align-items-end gap-2 bg-white p-3 shadow-sm rounded border">
             <div>
@@ -98,6 +89,8 @@
                                 <!-- Botão Editar Data -->
                                 <a href="{% url 'owner_edit_appointment' appt.id %}" class="btn btn-sm btn-outline-primary mb-2 w-100">
                                     Editar
+                                </a>
+                                <a href="{% url 'cancel_appointment' appt.id %}" class="btn btn-outline-danger btn-sm w-100 mt-2" onclick="return confirm('Tem certeza que deseja cancelar o agendamento desta(e) cliente?');">Cancelar
                                 </a>
                                 <!-- Botão Confirmar -->
                                 <a href="{% url 'toggle_appointment_confirmation' appt.id %}" class="btn btn-sm {% if appt.is_confirmed %}btn-outline-danger{% else %}btn-success{% endif %} w-100">
