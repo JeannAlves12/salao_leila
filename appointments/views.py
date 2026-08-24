@@ -5,6 +5,7 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.dateparse import parse_datetime
+from django.core.paginator import Paginator
 from .models import Service, Appointment, AppointmentItem
 from .forms import AppointmentForm, OwnerAppointmentForm
 from .services import check_existing_appointment_this_week, can_edit_appointment, get_owner_dashboard_metrics
@@ -220,3 +221,26 @@ def owner_new_appointment_view(request):
     else:
         form = OwnerAppointmentForm()
     return render(request, 'appointments/owner_new_appointment.html', {'form': form})
+
+
+@login_required
+def appointment_history_view(request):
+    appointments = Appointment.objects.filter(client=request.user).order_by('-date_time')
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    if start_date:
+        appointments = appointments.filter(date_time__date__gte=start_date)
+    if end_date:
+        appointments = appointments.filter(date_time__date__lte=end_date)
+
+    # Configuração da Paginação (ex: 5 agendamentos por página)
+    paginator = Paginator(appointments, 5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'appointments/history.html', {
+        'page_obj': page_obj,  # Passamos o objeto paginado para o template
+        'start_date': start_date,
+        'end_date': end_date
+    })
