@@ -18,6 +18,14 @@
                     <div class="mb-3">
                         {{ form.date_time.label_tag }}
                         {{ form.date_time }}
+                        <!-- Exibe os erros de validação da data -->
+                        {% if form.date_time.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.date_time.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
 
                     <div class="mb-4">

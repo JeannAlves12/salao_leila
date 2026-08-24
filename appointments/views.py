@@ -52,17 +52,21 @@ def new_appointment_view(request):
                         'services_list': request.POST.getlist('services'),
                     })
             
-            appointment = Appointment.objects.create(
+            appointment, created = Appointment.objects.get_or_create(
                 client=request.user,
                 date_time=desired_date
             )
+
+            if not created:
+                appointment.is_confirmed = False
+                appointment.save()
             
             selected_services = form.cleaned_data['services']
             for service in selected_services:
-                AppointmentItem.objects.create(
+                AppointmentItem.objects.get_or_create(
                     appointment=appointment,
                     service=service,
-                    status='pendente'
+                    defaults={'status': 'pendente'}
                 )
             
             return redirect('appointment_history')

@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 class Service(models.Model):
     name = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=8, decimal_places=2)
-
+    duration = models.IntegerField(default=60, help_text="Duração em minutos")
     def __str__(self):
         return f"{self.name} - R${self.price}"
 
