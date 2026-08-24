@@ -45,7 +45,7 @@ def owner_edit_appointment_view(request, appointment_id):
         form = AppointmentForm(request.POST, instance=appointment)
         if form.is_valid():
             appointment = form.save()
-            
+
             appointment.items.all().delete()
             selected_services = form.cleaned_data['services']
             for service in selected_services:
@@ -59,7 +59,7 @@ def owner_edit_appointment_view(request, appointment_id):
     else:
         initial_services = appointment.items.values_list('service', flat=True)
         formatted_date = appointment.date_time.strftime('%Y-%m-%dT%H:%M')
-        
+
         form = AppointmentForm(instance=appointment, initial={
             'services': initial_services,
             'date_time': formatted_date

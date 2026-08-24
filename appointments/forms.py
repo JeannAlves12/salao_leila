@@ -17,7 +17,7 @@ class AppointmentForm(forms.ModelForm):
     class Meta:
         model = Appointment
         fields = ['date_time', 'services']
-        widgets= {
+        widgets = {
             'date_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'})
         }
         labels = {
@@ -55,27 +55,24 @@ class AppointmentForm(forms.ModelForm):
                 date_time__gte=day_start,
                 date_time__lt=day_end
             )
-            
+
             if self.instance and self.instance.pk:
                 existing_appointments = existing_appointments.exclude(pk=self.instance.pk)
-                
+
             for appt in existing_appointments:
                 appt_start = timezone.localtime(appt.date_time)
-                
-                # Soma a duração de todos os serviços deste agendamento existente (ignorando cancelados)
                 appt_duration = sum(
                     item.service.duration for item in appt.items.exclude(status='cancelado')
                 )
-                
+
                 if appt_duration == 0:
                     continue
-                    
+
                 appt_end = appt_start + timedelta(minutes=appt_duration)
 
-                # Regra Matemática de Interseção de Tempo
                 if new_start < appt_end and new_end > appt_start:
                     self.add_error(
-                        'date_time', 
+                        'date_time',
                         f"Horário indisponível. Já existe um atendimento das {appt_start.strftime('%H:%M')} às {appt_end.strftime('%H:%M')}."
                     )
                     break
@@ -89,7 +86,7 @@ class OwnerAppointmentForm(AppointmentForm):
         label="Selecione um Cliente",
         widget=forms.Select(attrs={'class': 'form-select mb-3'})
     )
-    
+
     class Meta(AppointmentForm.Meta):
         fields = ['client', 'date_time', 'services']
 
@@ -100,16 +97,16 @@ class ServiceForm(forms.ModelForm):
         fields = ['name', 'price', 'duration']
         widgets = {
             'name': forms.TextInput(attrs={
-                'class': 'form-control', 
+                'class': 'form-control',
                 'placeholder': 'Ex: Corte de Cabelo'
             }),
             'price': forms.NumberInput(attrs={
-                'class': 'form-control', 
-                'step': '0.01', 
+                'class': 'form-control',
+                'step': '0.01',
                 'placeholder': 'Ex: 50.00'
             }),
             'duration': forms.NumberInput(attrs={
-                'class': 'form-control', 
+                'class': 'form-control',
                 'placeholder': 'Duração em minutos'
             }),
         }

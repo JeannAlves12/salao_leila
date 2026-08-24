@@ -1,0 +1,3 @@
+[flake8]
+exclude = venv, cbv
+ignore = E501, F401

@@ -23,4 +23,3 @@ def service_detail_view(request, service_id):
     else:
         form = ServiceForm(instance=service)
     return render(request, 'appointments/owner_service_detail.html', {'form': form, 'service': service})
-

@@ -12,14 +12,14 @@ from appointments.services import check_existing_appointment_this_week, can_edit
 def new_appointment_view(request):
     if request.method == 'POST':
         form = AppointmentForm(request.POST)
-        
+
         ignore_suggestion = request.POST.get('ignore_suggestion', False)
         accept_suggestion = request.POST.get('accept_suggestion', False)
         suggested_date = request.POST.get('suggested_date', None)
 
         if form.is_valid():
             desired_date = form.cleaned_data['date_time']
-            
+
             if accept_suggestion and suggested_date:
                 desired_date = parse_datetime(suggested_date)
 
@@ -32,7 +32,7 @@ def new_appointment_view(request):
                         'desired_date': desired_date,
                         'services_list': request.POST.getlist('services'),
                     })
-            
+
             appointment, created = Appointment.objects.get_or_create(
                 client=request.user,
                 date_time=desired_date
@@ -41,7 +41,7 @@ def new_appointment_view(request):
             if not created:
                 appointment.is_confirmed = False
                 appointment.save()
-            
+
             selected_services = form.cleaned_data['services']
             for service in selected_services:
                 AppointmentItem.objects.get_or_create(
@@ -49,7 +49,7 @@ def new_appointment_view(request):
                     service=service,
                     defaults={'status': 'pendente'}
                 )
-            
+
             return redirect('appointment_history')
     else:
         service_id = request.GET.get('service_id')
@@ -111,12 +111,12 @@ def edit_appointment_view(request, appointment_id):
     else:
         initial_services = appointment.items.values_list('service', flat=True)
         formatted_date = appointment.date_time.strftime('%Y-%m-%dT%H:%M')
-        
+
         form = AppointmentForm(instance=appointment, initial={
             'services': initial_services,
             'date_time': formatted_date
         })
-    
+
     return render(request, 'appointments/client_edit_appointment.html', {'form': form, 'appointment': appointment})
 
 
@@ -127,11 +127,11 @@ def cancel_appointment_view(request, appointment_id):
     if appointment.client != request.user and not request.user.is_staff:
         messages.error(request, 'Você não tem permissão para cancelar este agendamento!')
         return redirect('service_list')
-    
+
     if not request.user.is_staff and not can_edit_appointment(appointment):
         messages.error(request, 'Agendamento acontece em menos de 2 dias. Favor ligar para o estabelecimento para cancelar!')
         return redirect('appointment_history')
-    
+
     appointment.delete()
     messages.success(request, 'Agendamento cancelado com sucesso!')
 

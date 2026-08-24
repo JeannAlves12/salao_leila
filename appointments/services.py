@@ -6,7 +6,7 @@ from datetime import timedelta
 
 def check_existing_appointment_this_week(user, desired_date):
     """
-    Regra de negocio: vai verificar se a cliente ja possui um agendamento na mesma e ano. 
+    Regra de negocio: vai verificar se a cliente ja possui um agendamento na mesma e ano.
     Retorna o objeto Appointment se existir, ou None caso contrario.
     """
     week = desired_date.isocalendar()[1]
@@ -44,12 +44,12 @@ def get_owner_dashboard_metrics(base_date=None):
             now = timezone.now().date()
     else:
         now = timezone.now().date()
-    
+
     start_of_week = now - timedelta(days=now.weekday())
     end_of_week = start_of_week + timedelta(days=6)
 
     appointments = Appointment.objects.filter(
-        date_time__date__gte=start_of_week, 
+        date_time__date__gte=start_of_week,
         date_time__date__lte=end_of_week
     ).order_by('date_time')
 
@@ -57,7 +57,7 @@ def get_owner_dashboard_metrics(base_date=None):
     for appt in appointments:
         for item in appt.items.exclude(status='cancelado'):
             weekly_revenue += item.service.price
-    
+
     return {
         'appointments': appointments,
         'weekly_revenue': weekly_revenue,
