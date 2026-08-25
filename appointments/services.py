@@ -1,4 +1,4 @@
-from .models import Appointment
+from .models import Appointment, AppointmentItem
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 from datetime import timedelta
@@ -66,3 +66,17 @@ def get_owner_dashboard_metrics(base_date=None):
         'end_of_week': end_of_week,
         'selected_date': now.strftime('%Y-%m-%d')
     }
+
+
+def auto_complete_past_appointments(user):
+    """
+    Função para o status virar 'concluido' automaticamente caso seja um agendamento no passado.
+    """
+    now = timezone.now()
+
+    past_items = AppointmentItem.objects.filter(
+        appointment__client=user,
+        appointment__date_time__lt=now,
+    ).exclude(status='concluido')
+
+    past_items.update(status='concluido')

@@ -43,8 +43,10 @@
                     </ul>
 
                     <div class="mt-3">
-                        <a href="{% url 'edit_appointment' appt.id %}" class="btn btn-outline-primary btn-sm">Editar Agendamento</a>
-                        <a href="{% url 'cancel_appointment' appt.id %}" class="btn btn-outline-danger btn-sm ms-2" onclick="return confirm('Tem certeza que deseja cancelar este agendamento?');">Cancelar</a>
+                        {% if appt.date_time > agora %}
+                            <a href="{% url 'edit_appointment' appt.id %}" class="btn btn-outline-primary btn-sm">Editar Agendamento</a>
+                            <a href="{% url 'cancel_appointment' appt.id %}" class="btn btn-outline-danger btn-sm ms-2" onclick="return confirm('Tem certeza que deseja cancelar este agendamento?');">Cancelar</a>
+                        {% endif %}
                         <div class="mt-1">
                             <small class="text-muted">(Alterações e cancelamentos permitidos até 2 dias antes)</small>
                         </div>

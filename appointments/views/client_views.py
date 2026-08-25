@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect
+from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils.dateparse import parse_datetime
 from django.core.paginator import Paginator
 from appointments.models import Appointment, AppointmentItem
 from appointments.forms import AppointmentForm
-from appointments.services import check_existing_appointment_this_week, can_edit_appointment
+from appointments.services import check_existing_appointment_this_week, can_edit_appointment, auto_complete_past_appointments
 
 
 @login_required
@@ -64,23 +65,31 @@ def new_appointment_view(request):
 
 @login_required
 def appointment_history_view(request):
-    appointments = Appointment.objects.filter(client=request.user).order_by('-date_time')
+    auto_complete_past_appointments(request.user)
+    appointments = Appointment.objects.filter(client=request.user).order_by('date_time')
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
 
-    if start_date:
-        appointments = appointments.filter(date_time__date__gte=start_date)
-    if end_date:
-        appointments = appointments.filter(date_time__date__lte=end_date)
+    if start_date or end_date:
+        if start_date:
+            appointments = appointments.filter(date_time__date__gte=start_date)
+        if end_date:
+            appointments = appointments.filter(date_time__date__lte=end_date)
+    else:
+        today = timezone.now().date()
+        appointments = appointments.filter(date_time__date__gte=today)
 
     paginator = Paginator(appointments, 5)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    agora = timezone.now()
+
     return render(request, 'appointments/client_history.html', {
         'page_obj': page_obj,
         'start_date': start_date,
-        'end_date': end_date
+        'end_date': end_date,
+        'agora': agora
     })
 
 
