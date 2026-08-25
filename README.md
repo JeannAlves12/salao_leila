@@ -75,3 +75,8 @@ Para garantir a manutenibilidade, a transparência e a escalabilidade do código
 * **Isolamento de Regras de Negócio:** As lógicas mais complexas (como a trava de 2 dias e a sugestão de agendamentos na mesma semana) foram extraídas para um arquivo isolado (`services.py`). Isso evita que as *Views* e os *Models* fiquem sobrecarregados (Fat Models / Fat Views) e facilita a aplicação de testes unitários.
 * **Modularização das Views:** O projeto não utiliza um único arquivo `views.py` gigante. As rotas foram separadas em (`client_views.py`, `owner_views.py`, `auth_views.py`, etc.), tornando a navegação pelo projeto muito mais simples e fácil de entender.
 * **Uso de FBVs vs CBVs:** Optei por construir o sistema utilizando *Function-Based Views (FBVs)* para manter o fluxo de dados o mais explícito e legível possível. No entanto, por curiosidade pesquisei como ficaria a arquitetura com *Class-Based Views (CBVs)* no futuro. Por isso a existência da pasta (`cbv`) dentro de (`appointments`). 
+
+
+## Pasta ('evidencias')
+
+Contém imagens pedidas para avaliação.

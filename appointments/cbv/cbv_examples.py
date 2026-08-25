@@ -22,8 +22,6 @@ class ServiceListView(ListView):
     model = Service
     template_name = 'appointments/service_list.html'
     
-    # O padrão do Django seria enviar os dados para o HTML com o nome 'object_list'.
-    # Como no seu HTML você usou {% for service in services %}, nós avisamos isso ao Django aqui:
     context_object_name = 'services'
 
 
@@ -35,17 +33,13 @@ class ServiceUpdateView(UserPassesTestMixin, SuccessMessageMixin, UpdateView):
     model = Service
     form_class = ServiceForm
     template_name = 'appointments/owner_service_detail.html'
-    
-    # Dizemos ao Django que na URL usamos <int:service_id> em vez do padrão <int:pk>
+
     pk_url_kwarg = 'service_id' 
     
-    # Para onde redirecionar após o POST ser salvo com sucesso
     success_url = reverse_lazy('service_list') 
     
-    # Mensagem de sucesso (o %(name)s puxa dinamicamente o nome do serviço salvo)
     success_message = "Serviço %(name)s alterado com sucesso."
 
-    # Esta função substitui o decorador @staff_member_required
     def test_func(self):
         return self.request.user.is_staff
 
@@ -59,13 +53,9 @@ class SignUpView(CreateView):
     template_name = 'appointments/signup.html'
     success_url = reverse_lazy('service_list')
 
-    # A CreateView salva o formulário, mas não faz o login automático.
-    # Por isso, sobrescrevemos o método form_valid para adicionar o login.
     def form_valid(self, form):
-        # super().form_valid(form) salva o novo usuário no banco de dados
         response = super().form_valid(form) 
         
-        # self.object armazena a instância do usuário recém-criado
         login(self.request, self.object)    
         
         return response
@@ -76,8 +66,6 @@ class SignUpView(CreateView):
 # ==========================================
 class LoginRedirectView(LoginRequiredMixin, RedirectView):
     
-    # A RedirectView redireciona para uma URL. Como a nossa URL 
-    # depende de quem está logado, usamos o get_redirect_url.
     def get_redirect_url(self, *args, **kwargs):
         if self.request.user.is_staff:
             return reverse_lazy('owner_dashboard')
@@ -92,13 +80,10 @@ class ClientHistoryView(LoginRequiredMixin, ListView):
     model = Appointment
     template_name = 'appointments/client_history.html'
     
-    # A ListView injeta a paginação automaticamente no HTML se usarmos o nome 'page_obj'
     context_object_name = 'page_obj'
     
-    # Lembra das linhas de Paginator() na sua função? Na CBV, basta UMA linha:
     paginate_by = 5 
 
-    # Sobrescrevemos a busca no banco para trazer apenas os da cliente logada e aplicar filtros
     def get_queryset(self):
         qs = Appointment.objects.filter(client=self.request.user).order_by('-date_time')
         
@@ -112,7 +97,6 @@ class ClientHistoryView(LoginRequiredMixin, ListView):
             
         return qs
 
-    # Injetamos as datas de volta no contexto do HTML para manter os filtros preenchidos na tela
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['start_date'] = self.request.GET.get('start_date')
@@ -128,31 +112,23 @@ class ClientCancelView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Appointment
     pk_url_kwarg = 'appointment_id'
     
-    # Para onde ir depois de deletar com sucesso
     success_url = reverse_lazy('appointment_history')
 
-    # A mágica da segurança: O UserPassesTestMixin roda esta função ANTES de tudo.
-    # Se retornar False, a view é bloqueada imediatamente.
     def test_func(self):
-        appointment = self.get_object() # Pega o agendamento do banco sozinho
+        appointment = self.get_object()
         
-        # Dona pode tudo
         if self.request.user.is_staff:
             return True
             
-        # Cliente não pode cancelar agendamento dos outros
         if appointment.client != self.request.user:
             return False
             
-        # Aplica a sua regra de negócio dos 2 dias (que criamos no models ou services)
         return can_edit_appointment(appointment)
 
-    # O que acontece se a função acima retornar False? (Se o teste falhar)
     def handle_no_permission(self):
         messages.error(self.request, 'Você não tem permissão para cancelar ou o prazo de 2 dias expirou!')
         return redirect('appointment_history')
         
-    # Método executado quando a deleção de fato ocorre
     def delete(self, request, *args, **kwargs):
         messages.success(self.request, 'Agendamento cancelado com sucesso!')
         return super().delete(request, *args, **kwargs)
@@ -181,16 +157,12 @@ class StaffRequiredMixin(UserPassesTestMixin):
 class OwnerDashboardView(StaffRequiredMixin, TemplateView):
     template_name = 'appointments/owner_dashboard.html'
 
-    # Como o Dashboard pega dados variados, usamos a TemplateView 
-    # e sobrescrevemos o contexto para injetar as métricas nela.
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         filter_date = self.request.GET.get('week_filter')
         
-        # Chama a sua regra de negócio isolada no services.py
         metrics = get_owner_dashboard_metrics(filter_date)
         
-        # Mescla as métricas com o contexto do HTML
         context.update(metrics)
         return context
 
@@ -204,8 +176,6 @@ class OwnerCreateAppointmentView(StaffRequiredMixin, CreateView):
     template_name = 'appointments/owner_new_appointment.html'
     success_url = reverse_lazy('owner_dashboard')
 
-    # Interceptamos o momento que o form principal é validado para 
-    # salvar os serviços dentro do AppointmentItem
     def form_valid(self, form):
         appointment = form.save()
         
@@ -219,7 +189,6 @@ class OwnerCreateAppointmentView(StaffRequiredMixin, CreateView):
         
         messages.success(self.request, f"Atendimento agendado para {appointment.client.username} com sucesso!")
         
-        # Retorna o comportamento normal (redirecionar para a success_url)
         return super().form_valid(form)
 
 
@@ -228,8 +197,6 @@ class OwnerCreateAppointmentView(StaffRequiredMixin, CreateView):
 # Equivalente à sua toggle_appointment_confirmation_view
 # ==========================================
 class ToggleConfirmationView(StaffRequiredMixin, View):
-    # Usamos a View base genérica quando não queremos renderizar um HTML,
-    # apenas processar um clique em um botão e redirecionar.
     
     def get(self, request, appointment_id):
         appt = get_object_or_404(Appointment, id=appointment_id)
